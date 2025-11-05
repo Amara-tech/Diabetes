@@ -21,7 +21,7 @@ class RAGRecommender:
         # Initialize components
         self.doc_processor = DocumentProcessor(docs_path)
         self.embedding_manager = EmbeddingManager()
-        self.vectorstore = VectorStore(collection_name="pdf_document")
+        self.vectorstore = VectorStore(collection_name="recommendation_document")
         self.retriever = RAGRetriever(self.vectorstore, self.embedding_manager)
         self.generator = RecommendationGenerator()
 
@@ -32,6 +32,15 @@ class RAGRecommender:
         
     def initialize_knowledge_base(self):
         """Load, split, and embed documents once"""
+        # Check if vector store already has documents
+        existing_count = self.vectorstore.collection.count()
+        
+        if existing_count > 0:
+            print(f"Knowledge base already initialized with {existing_count} documents.")
+            print("\n\n Skipping document loading.")
+            return
+        
+        # Only load and embed if vector store is empty
         docs = self.doc_processor.process_all()
         split_docs = self.embedding_manager.split_documents(docs)
         texts = [d.page_content for d in split_docs]
@@ -46,7 +55,7 @@ class RAGRecommender:
         # Retrieve
         retrieved_docs = self.retriever.retrieve(query)
 
-        # Step 2: Augment & Generate
+        # Augment & Generate
         result = self.generator.generate(
             retrieved_docs=retrieved_docs,
             user_data=user_data,
@@ -65,6 +74,3 @@ if __name__ == "__main__":
     response = rag.recommend(user_query, user_data, prediction)
     print("\n🩺 Health Recommendation:\n")
     print(response)
-    
-    
-    
