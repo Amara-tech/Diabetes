@@ -2,7 +2,7 @@ import google.generativeai as genai
 from textwrap import dedent
 
 class RecommendationGenerator:
-    def __init__(self, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, model_name: str = "gemini-2.5-pro"):
         self.model_name = model_name
         self.model = genai.GenerativeModel(model_name)
 
@@ -11,7 +11,7 @@ class RecommendationGenerator:
         You are a health assistant specialized in diabetes prevention and management.
 
         Your task is to generate a clear, concise, and evidence-based health recommendation
-        based on the user’s information, the model’s prediction, and retrieved medical documents.
+        based on the user's information, the model's prediction, and retrieved medical documents.
 
         ### Context:
         The following context is retrieved from trusted medical sources:
@@ -35,7 +35,7 @@ class RecommendationGenerator:
         (Explain what their status means briefly)
 
         **Recommendations:**  
-        - (List 3–5 actionable steps tailored to user data)
+        - (List 3-5 actionable steps tailored to user data)
 
         **Next Steps:**  
         - (Include follow-up or monitoring advice)
@@ -45,7 +45,7 @@ class RecommendationGenerator:
 
     def generate(self, retrieved_docs, user_data, prediction):
         """Generate a health recommendation message."""
-        context_text = "\n\n".join([doc.page_content for doc in retrieved_docs])
+        context_text = "\n\n".join([doc["content"] for doc in retrieved_docs])
 
         prompt = self.template.format(
             retrieved_docs=context_text,

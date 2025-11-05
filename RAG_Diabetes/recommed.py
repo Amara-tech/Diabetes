@@ -29,6 +29,7 @@ class RAGRecommender:
         self.docs = None
         self.embeddings = None
         self.initialize_knowledge_base()
+        
     def initialize_knowledge_base(self):
         """Load, split, and embed documents once"""
         docs = self.doc_processor.process_all()
@@ -43,7 +44,7 @@ class RAGRecommender:
     def recommend(self, query: str, user_data: str, prediction: str):
         """Main RAG pipeline"""
         # Retrieve
-        retrieved_docs = self.retriever.retrieve(query, self.vectorstore)
+        retrieved_docs = self.retriever.retrieve(query)
 
         # Step 2: Augment & Generate
         result = self.generator.generate(

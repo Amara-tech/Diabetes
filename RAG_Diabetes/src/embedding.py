@@ -1,13 +1,21 @@
 from typing import List
-import google.generativeai as genai
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from google import genai
 import numpy as np
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found in .env file")
+client = genai.Client(api_key=api_key)
 
 
 class EmbeddingManager:
     """Handles document embedding using Google Gemini embedding models"""
 
-    def __init__(self, model_name: str = "text-embedding-004"):
+    def __init__(self, model_name: str = "gemini-embedding-001", output_dim: int=768):
         """
         Initialize the EmbeddingManager with a Gemini model.
         
@@ -15,6 +23,8 @@ class EmbeddingManager:
             model_name: Google embedding model name (e.g., 'text-embedding-004')
         """
         self.model_name = model_name
+        self.client = genai.Client()
+        self.output_dim = output_dim
         
     def split_documents(self, documents, chunk_size=1000, chunk_overlap=200):
         """Split loaded documents into smaller chunks."""
@@ -35,7 +45,7 @@ class EmbeddingManager:
             print(f"Metadata: {split_docs[0].metadata}")
         return split_docs
                 
-    def generate_embeddings(self, texts: List[str], batch_size: int = 50) -> np.ndarray:
+    def generate_embeddings(self, texts: List[str], batch_size: int = 5) -> np.ndarray:
         """
         Generate embeddings for a list of texts using the Gemini embedding API.
         
@@ -50,16 +60,21 @@ class EmbeddingManager:
         embeddings = []
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
-            result = genai.embed_content(
-                model=self.model_name,
-                content=batch
-        )
-            print("Result keys:", result.keys())
-            print("Result sample:", result)  
-            batch_embeddings = [r['embedding'] for r in result['embeddings']]
-            embeddings.extend(batch_embeddings)
-            print(f"Processed batch {i//batch_size + 1}/{len(texts)//batch_size + 1}")
-
+            print(f"Processing batch {i//batch_size + 1}...")
+            try:
+                result = self.client.models.embed_content(
+                    model=self.model_name,
+                    contents=batch,
+                    config=genai.types.EmbedContentConfig(
+                    task_type="RETRIEVAL_DOCUMENT",   
+                    output_dimensionality=self.output_dim
+                )
+                )
+                batch_embeddings = [np.array(e.values) for e in result.embeddings]
+                embeddings.extend(batch_embeddings)
+            except Exception as e:
+                print(f"Error embedding text: {e}")
         embeddings_array = np.array(embeddings)
         print(f"Generated embeddings with shape: {embeddings_array.shape}")
         return embeddings_array
+
