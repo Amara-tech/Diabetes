@@ -77,4 +77,24 @@ class VectorStore:
             except Exception as e:
                 print(f"Error adding documents to vectordb store{e}")    
                 raise
-            
+    
+    def delete_vector_db(self):
+        """Completely delete the vector database directory and reset the client."""
+        import shutil
+
+        if os.path.exists(self.persist_directory):
+            print(f"Deleting existing vector DB at: {self.persist_directory}")
+            shutil.rmtree(self.persist_directory, ignore_errors=True)
+        else:
+            print("No existing vector DB found to delete.")
+
+        # Recreate clean directory and reset client
+        os.makedirs(self.persist_directory, exist_ok=True)
+        self.client = chromadb.PersistentClient(path=self.persist_directory)
+        self.collection = self.client.get_or_create_collection(
+            name=self.collection_name,
+            metadata={"description": "PDF document embedding for RAG"}
+        )
+        print(f"Fresh vector DB initialized at: {self.persist_directory}")
+        
+  

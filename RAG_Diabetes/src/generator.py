@@ -9,42 +9,53 @@ class PreprocessingGeneration:
     def __init__(self, model_name="gemini-2.5-pro"):
         self.model = genai.GenerativeModel(model_name)
         self.template = dedent("""
-        You are a medical reasoning assistant helping prepare input data for a diabetes prediction model.
+        You are a medical data inference assistant helping with a diabetes prediction system.
 
-        ### Task:
-        Your goal is to analyze the user's incomplete health data, use the retrieved context, and infer or suggest reasonable estimates for missing values.  
-        Do not create random numbers; instead, use reasoning based on correlations, patterns, or standard health ranges described in the documents.
+        Your task is to infer and complete **only the missing health inputs** required for predicting whether a user has diabetes.
 
-        ### Retrieved Context (Knowledge Base):
+        ### Purpose
+        The goal of completing the data is to prepare full input values for a diabetes prediction model. Do not predict diabetes yourself — only fill in the missing fields logically based on the retrieved examples.
+
+        ### Retrieved Patient Context
         {retrieved_docs}
 
-        ### User-Provided Data:
+        ### Current User Data (some fields may be missing)
         {user_data}
 
-        ### Instructions:
-        1. Identify which features are missing from the user data (e.g., glucose, BMI, blood pressure, insulin).
-        2. For each missing feature, use the retrieved context to infer a realistic estimated range or value.  
-           - Explain your reasoning briefly for each estimate.  
-           - Reference insights from the retrieved documents if relevant.
-        3. Fill the missing values with your best estimations.
-        4. Return a structured JSON-like output that includes all fields (filled and original).
+        ### Instructions
+        - Use patterns and correlations in the retrieved context to infer **realistic** values for any missing features.
+        - If a value is already provided in the user data, keep it unchanged.
+        - Only infer the following six features:
+           - "age": <float>
+           - "gender": "<string>"
+           - "bmi": <float>
+           - "hypertension": <0 or 1>
+           - "heart_disease": <0 or 1>
+           - "blood_glucose_level": <float>
+        - Do not invent new fields.
+        - Give concise, evidence-based reasoning for each inference.
+        - Output must follow the exact format below.
 
-        ### Output Format Example:
-        **Reasoning:**
-        - Glucose is missing; based on user's BMI and age, similar cases in the documents show a likely fasting glucose range between 120-140 mg/dL. I'll estimate 130 mg/dL.
-        - Insulin missing; average insulin for such glucose and BMI profile is around 80 µU/mL.
+        ### Response Format
+            **Reasoning:**
+               - Explain briefly how each field was inferred.
 
-        **Completed Data:**
-        {{
-          "Age": 45,
-          "Gender": "Female",
-          "BMI": 31.2,
-          "Blood Glucose": 130,
-          "Heart disease": 1,
-          "Hypertention": 0
-        }}
-
-        Now, output your reasoning and completed data in this format.
+               **Completed Data:**
+                   ```json
+                 {{
+                    "age": <float>,
+                    "gender": "<string>",
+                    "bmi": <float>,
+                    "hypertension": <0 or 1>,
+                    "heart_disease": <0 or 1>,
+                    "blood_glucose_level": <float>
+                 }}
+        ---
+            Make sure your final output includes BOTH sections exactly as shown:
+            1. A "Reasoning" section.
+            2. A "Completed Data" section containing a valid JSON object with only these six fields.
+            Do not omit or summarize the JSON block.
+ 
         """)
 
     def infer_missing_data(self, retrieved_docs, user_data):
@@ -59,25 +70,32 @@ class PreprocessingGeneration:
         response = self.model.generate_content(prompt)
         text_output = response.text
 
-        # Extract reasoning
+        print("=== MODEL RAW OUTPUT ===")
+        print(text_output)  
+   
         reasoning_match = re.search(r"\*\*Reasoning:\*\*(.*?)(?=\*\*Completed Data:|\Z)", text_output, re.S)
         reasoning = reasoning_match.group(1).strip() if reasoning_match else "Reasoning not found."
 
-        # --- Extract the JSON block under "Completed Data" ---
-        json_match = re.search(r"\*\*Completed Data:\*\*([\s\S]*)", text_output)
+        json_match = re.search(r"\*\*Completed Data:\*\*[\s\S]*?({[\s\S]*})", text_output)
+        if not json_match:
+            json_match = re.search(r"{[\s\S]*}", text_output)
+
         completed_json = json_match.group(1).strip() if json_match else "{}"
 
-        # Clean and parse JSON safely
         try:
             completed_json = completed_json.strip("` \n")
             data_dict = json.loads(completed_json)
         except Exception:
             data_dict = {}
 
-        # Convert to DataFrame
-        df = pd.DataFrame([data_dict])
+        complete_data = {
+            "reasoning": reasoning,
+            "completed_data": data_dict
+        }
 
-        return reasoning, df
+        return complete_data
+
+
     
     
     

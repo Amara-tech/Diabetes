@@ -38,42 +38,26 @@ class Preprocessing:
         - PDFs are processed with DocumentProcessor (page by page)
         - CSVs are processed manually, one row per Document
         """
-        if not os.path.isdir(self.docs_path):
-            raise ValueError(f"{self.docs_path} is not a valid directory.")
-
-        all_docs = []
+        pdf_docs_all = []
+        csv_docs_all = []
 
         for filename in os.listdir(self.docs_path):
             file_path = os.path.join(self.docs_path, filename)
-
-            # --- Ignore hidden/system files ---
             if filename.startswith("."):
-                print(f"Skipping system file: {filename}")
                 continue
 
-            # --- Handle PDFs normally ---
             if filename.lower().endswith(".pdf"):
                 print(f"Detected PDF file: {filename}")
                 doc_processor = DocumentProcessor(self.docs_path, rag_type="preprocessing")
                 pdf_docs = doc_processor.process_all()
-                splitted_docs = self.embedding_manager.split_documents(pdf_docs)
-                all_docs.extend(splitted_docs)
+                pdf_docs_all.extend(pdf_docs)
 
-            # --- Handle CSVs row-by-row ---
             elif filename.lower().endswith(".csv"):
                 print(f"Detected CSV file: {filename}")
                 csv_docs = self._load_csv_as_documents(file_path)
-                all_docs.extend(csv_docs)
+                csv_docs_all.extend(csv_docs)
 
-            else:
-                print(f"Skipping unsupported file: {filename}")
-
-        if not all_docs:
-            raise ValueError("No supported documents (.pdf or .csv) found in the directory.")
-
-        print(f"\nLoaded total of {len(all_docs)} documents from {self.docs_path}")
-        self.documents = all_docs
-        return all_docs
+        return pdf_docs_all, csv_docs_all
 
     def _load_csv_as_documents(self, file_path: str):
         """Convert each CSV row into a LangChain Document."""
@@ -88,26 +72,45 @@ class Preprocessing:
                 )
             )
         return documents
-    
     def initialize_knowledge_base(self):
-        """Load, split, and embed documents once"""
-        # Check if vector store already has documents
         existing_count = self.vectorstore.collection.count()
-        
+
+        # Detect incomplete or corrupted DB (for example, fewer than expected docs)
+        MIN_EXPECTED_DOCS = 3000
+
         if existing_count > 0:
-            print(f"✓ Knowledge base already initialized with {existing_count} documents.")
-            print("  Skipping document loading.")
-            return
-        
-        # Only load and embed if vector store is empty
-        split_docs = self.load_documents()
-        texts = [d.page_content for d in split_docs]
-        embeddings = self.embedding_manager.generate_embeddings(texts)
-        self.vectorstore.add_docs(split_docs, embeddings)
-        self.docs = split_docs
-        self.embeddings = embeddings
-        print("Knowledge base initialized successfully.")
-        
+            if existing_count < MIN_EXPECTED_DOCS:
+                print(f"Detected incomplete vector DB ({existing_count} docs). Rebuilding...")
+                self.vectorstore.delete_vector_db()
+            else:
+                print(f"Knowledge base already initialized with {existing_count} documents.")
+                return
+        else:
+            print("No existing vector DB found. Creating new one...")
+
+            # Rebuild embeddings fresh
+            pdf_docs, csv_docs = self.load_documents()
+
+            # Handle CSV documents (no splitting)
+            if csv_docs:
+                print(f"Embedding {len(csv_docs)} CSV documents...")
+                csv_texts = [d.page_content for d in csv_docs]
+                csv_embeddings = self.embedding_manager.generate_embeddings(csv_texts)
+                self.vectorstore.add_docs(csv_docs, csv_embeddings)
+                print(f"Added {len(csv_docs)} CSV docs to vector DB")
+
+            # Handle PDF documents (with splitting)
+            if pdf_docs:
+                print(f"Splitting and embedding {len(pdf_docs)} PDF documents...")
+                split_pdf_docs = self.embedding_manager.split_documents(pdf_docs)
+                pdf_texts = [d.page_content for d in split_pdf_docs]
+                pdf_embeddings = self.embedding_manager.generate_embeddings(pdf_texts)
+                self.vectorstore.add_docs(split_pdf_docs, pdf_embeddings)
+                print(f"✓ Added {len(split_pdf_docs)} split PDF docs to vector DB")
+            print("Knowledge base initialized successfully.")
+    
+    
+    
     def recommend(self, user_data: str):
         """Main RAG pipeline"""
         # Retrieve
@@ -123,22 +126,22 @@ class Preprocessing:
                
 if __name__ == "__main__":
     rag = Preprocessing()
-    query = "Which patients have high blood glucose and HbA1c levels?"
+    query = "I am 19 years, 5.4 feet, am Female, I don't have hypertension and heart disease but I don't know my bmi?"
 
     print(f"\nQuery: {query}\n")
 
     # Step 1: Retrieve relevant docs from vector store
-    results = rag.retriever.search(query, top_k=3)
+    results = rag.retriever.retrieve(query, top_k=3)
 
-    print("\n📄 Retrieved Documents:")
+    print("\nRetrieved Documents:")
     for i, doc in enumerate(results, 1):
         print(f"\n--- Document {i} ---")
-        print(doc.page_content[:300])  # Show part of the text
-        print(f"Metadata: {doc.metadata}")
+        print(doc["content"][:300])
+        print(f"Metadata: {doc['metadata']}")
 
     # Step 2: Generate an AI-based response using the retrieved docs
     print("\nGenerating AI response...")
-    response = rag.generator.generate_response(query, results)
+    response = rag.generator.infer_missing_data(results, query)
 
     print("\nFinal Answer:")
     print(response)
