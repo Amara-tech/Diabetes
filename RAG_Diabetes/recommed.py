@@ -50,7 +50,7 @@ class RAGRecommender:
         self.embeddings = embeddings
         print("Knowledge base initialized successfully.")
 
-    def recommend(self, query: str, user_data: str, prediction: str):
+    def recommend(self, query: str, user_data: dict, prediction: str):
         """Main RAG pipeline"""
         # Retrieve
         retrieved_docs = self.retriever.retrieve(query)

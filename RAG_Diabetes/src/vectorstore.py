@@ -46,17 +46,22 @@ class VectorStore:
         """
         if len(documents) != len(embeddings):
             raise ValueError("Number of documents must match number of embeddings")
-        print(f"Adding {len(documents)} documents to vector store...")
+        
+        print(f"Preparing {len(documents)} documents to add to vector store...")
         
         ids = []
         metadatas = []
         documents_text = []
         embeddings_list = []
+        
+        # --- LOOP ---
+        # 1. Build the lists first
         for i, (doc, embedding) in enumerate(zip(documents, embeddings)):
             doc_id = f"doc_{uuid.uuid4().hex[:8]}_{i}"
             ids.append(doc_id)
             
-            metadata = dict(doc.metadata)
+            # Make a copy of the metadata to avoid modifying the original doc
+            metadata = dict(doc.metadata) 
             metadata['doc_index'] = i
             metadata['content_length'] = len(doc.page_content)
             metadatas.append(metadata)
@@ -64,19 +69,24 @@ class VectorStore:
             documents_text.append(doc.page_content)
             
             embeddings_list.append(embedding.tolist())
+        # --- LOOP ENDS ---
+        
+        # --- BATCH ADD ---
+        # 2. Now, add everything in a single, efficient batch operation
+        try:
+            print(f"Adding {len(ids)} documents to collection in one batch...")
+            self.collection.add(
+                ids=ids,
+                embeddings=embeddings_list,
+                metadatas=metadatas,
+                documents=documents_text
+            )
+            print(f"Successfully added {len(ids)} documents to vector db.")
+            print(f"Total documents in collection: {self.collection.count()}")
             
-            try:
-                self.collection.add(
-                    ids=ids,
-                    embeddings=embeddings_list,
-                    metadatas=metadatas,
-                    documents=documents_text
-                )
-                print(f"Successfully added {len(documents)} documents to vector db")
-                print(f"Total documents in collection: {self.collection.count()}")
-            except Exception as e:
-                print(f"Error adding documents to vectordb store{e}")    
-                raise
+        except Exception as e:
+            print(f"Error adding documents to vector store: {e}")    
+            raise
     
     def delete_vector_db(self):
         """Completely delete the vector database directory and reset the client."""

@@ -111,37 +111,20 @@ class Preprocessing:
     
     
     
-    def recommend(self, user_data: str):
-        """Main RAG pipeline"""
-        # Retrieve
-        retrieved_docs = self.retriever.retrieve(user_data)
-
-        # Step 2: Augment & Generate
+    # In Preprocessing class
+    def recommend(self, query: str, user_data_dict: dict):
+        retrieved_docs = rag.retriever.retrieve(query, top_k=5)
         result = self.generator.infer_missing_data(
             retrieved_docs=retrieved_docs,
-            user_data=user_data,
+            user_data=user_data_dict,
+            query=query  
         )
-
-        return result    
+        return result 
                
 if __name__ == "__main__":
     rag = Preprocessing()
     query = "I am 19 years, 5.4 feet, am Female, I don't have hypertension and heart disease but I don't know my bmi?"
-
+    user_data = {"age": 19, "gender": "Female", "hypertension": 0, "heart_disease": 0, "bmi": " "} 
     print(f"\nQuery: {query}\n")
-
-    # Step 1: Retrieve relevant docs from vector store
-    results = rag.retriever.retrieve(query, top_k=3)
-
-    print("\nRetrieved Documents:")
-    for i, doc in enumerate(results, 1):
-        print(f"\n--- Document {i} ---")
-        print(doc["content"][:300])
-        print(f"Metadata: {doc['metadata']}")
-
-    # Step 2: Generate an AI-based response using the retrieved docs
-    print("\nGenerating AI response...")
-    response = rag.generator.infer_missing_data(results, query)
-
-    print("\nFinal Answer:")
+    response = rag.recommend(query, user_data)
     print(response)

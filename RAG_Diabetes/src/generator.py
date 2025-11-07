@@ -21,6 +21,12 @@ class PreprocessingGeneration:
 
         ### Current User Data (some fields may be missing)
         {user_data}
+        
+        ### User Query (contains extra unstructured details)
+        {query}
+
+        ### Instructions
+        - Use patterns in the retrieved context AND the user query to infer realistic values...
 
         ### Instructions
         - Use patterns and correlations in the retrieved context to infer **realistic** values for any missing features.
@@ -58,35 +64,50 @@ class PreprocessingGeneration:
  
         """)
 
-    def infer_missing_data(self, retrieved_docs, user_data):
+    def infer_missing_data(self, retrieved_docs, user_data, query: str):
         """Use Gemini to reason about and fill missing user health data."""
         retrieved_context = "\n\n".join([doc["content"] for doc in retrieved_docs])
 
         prompt = self.template.format(
             retrieved_docs=retrieved_context,
-            user_data=json.dumps(user_data, indent=2)
+            user_data=json.dumps(user_data, indent=2),
+            query=query 
         )
 
+        # top-tier model for this kind of complex reasoning task.
         response = self.model.generate_content(prompt)
         text_output = response.text
 
         print("=== MODEL RAW OUTPUT ===")
         print(text_output)  
-   
+        
+        #Get Reasoning
         reasoning_match = re.search(r"\*\*Reasoning:\*\*(.*?)(?=\*\*Completed Data:|\Z)", text_output, re.S)
         reasoning = reasoning_match.group(1).strip() if reasoning_match else "Reasoning not found."
 
+        # Get JSON
+        # It looks for "Completed Data
+        # and then finds the first complete { ... } block.
         json_match = re.search(r"\*\*Completed Data:\*\*[\s\S]*?({[\s\S]*})", text_output)
-        if not json_match:
-            json_match = re.search(r"{[\s\S]*}", text_output)
-
-        completed_json = json_match.group(1).strip() if json_match else "{}"
-
-        try:
-            completed_json = completed_json.strip("` \n")
-            data_dict = json.loads(completed_json)
-        except Exception:
-            data_dict = {}
+        
+        completed_json_str = None
+        if json_match:
+            completed_json_str = json_match.group(1).strip()
+            # Clean up potential markdown backticks
+            completed_json_str = completed_json_str.strip("` \n")
+        
+        # 3. Parse JSON
+        data_dict = {}
+        if completed_json_str:
+            try:
+                data_dict = json.loads(completed_json_str)
+            except json.JSONDecodeError as e:
+                print(f"Error parsing model's JSON output: {e}")
+                print(f"Raw JSON string: {completed_json_str}")
+                data_dict = {"error": "Failed to parse JSON from model"}
+        else:
+            print("Could not find 'Completed Data' JSON block in model output.")
+            data_dict = {"error": "JSON block not found"}
 
         complete_data = {
             "reasoning": reasoning,
