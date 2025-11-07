@@ -7,7 +7,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
-class RAGRecommender:
+class Recommender:
     """High-level RAG system for diabetes recommendation"""
 
     def __init__(self, docs_path: str = "RAG_DOCs/Recommend"):
@@ -21,7 +21,7 @@ class RAGRecommender:
         # Initialize components
         self.doc_processor = DocumentProcessor(docs_path)
         self.embedding_manager = EmbeddingManager()
-        self.vectorstore = VectorStore(collection_name="recommendation_document")
+        self.vectorstore = VectorStore(collection_name="recommendation_document", persist_directory="RAG_DOCs/vector_store_reco")
         self.retriever = RAGRetriever(self.vectorstore, self.embedding_manager)
         self.generator = RecommendationGenerator()
 
@@ -64,13 +64,3 @@ class RAGRecommender:
 
         return result
     
-if __name__ == "__main__":
-    rag = RAGRecommender()
-
-    user_query = "What dietary steps can help control blood sugar?"
-    user_data = "Age: 45, BMI: 29, Glucose: 150, BloodPressure: 85"
-    prediction = "At risk of diabetes"
-
-    response = rag.recommend(user_query, user_data, prediction)
-    print("\n🩺 Health Recommendation:\n")
-    print(response)

@@ -23,7 +23,7 @@ class Preprocessing:
         # Initialize components
         self.docs_path = docs_path
         self.embedding_manager = EmbeddingManager()
-        self.vectorstore = VectorStore(collection_name="preprocessing_document")
+        self.vectorstore = VectorStore(collection_name="preprocessing_document", persist_directory="RAG_DOCs/vector_store_prepro")
         self.retriever = RAGRetriever(self.vectorstore, self.embedding_manager)
         self.generator = PreprocessingGeneration()
 
@@ -113,7 +113,7 @@ class Preprocessing:
     
     # In Preprocessing class
     def recommend(self, query: str, user_data_dict: dict):
-        retrieved_docs = rag.retriever.retrieve(query, top_k=5)
+        retrieved_docs = self.retriever.retrieve(query, top_k=5)
         result = self.generator.infer_missing_data(
             retrieved_docs=retrieved_docs,
             user_data=user_data_dict,
@@ -121,10 +121,3 @@ class Preprocessing:
         )
         return result 
                
-if __name__ == "__main__":
-    rag = Preprocessing()
-    query = "I am 19 years, 5.4 feet, am Female, I don't have hypertension and heart disease but I don't know my bmi?"
-    user_data = {"age": 19, "gender": "Female", "hypertension": 0, "heart_disease": 0, "bmi": " "} 
-    print(f"\nQuery: {query}\n")
-    response = rag.recommend(query, user_data)
-    print(response)

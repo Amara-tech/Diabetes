@@ -3,6 +3,8 @@ import chromadb
 import uuid
 import numpy as np
 import os
+import shutil
+
 
 class VectorStore:
     """Manages document embeddings in a Chromadb vector store"""
@@ -54,57 +56,66 @@ class VectorStore:
         documents_text = []
         embeddings_list = []
         
-        # --- LOOP ---
-        # 1. Build the lists first
+        # --- 1. BUILD THE LISTS (This is fast, keep it) ---
         for i, (doc, embedding) in enumerate(zip(documents, embeddings)):
             doc_id = f"doc_{uuid.uuid4().hex[:8]}_{i}"
             ids.append(doc_id)
-            
-            # Make a copy of the metadata to avoid modifying the original doc
             metadata = dict(doc.metadata) 
             metadata['doc_index'] = i
             metadata['content_length'] = len(doc.page_content)
             metadatas.append(metadata)
-            
             documents_text.append(doc.page_content)
-            
             embeddings_list.append(embedding.tolist())
-        # --- LOOP ENDS ---
         
-        # --- BATCH ADD ---
-        # 2. Now, add everything in a single, efficient batch operation
-        try:
-            print(f"Adding {len(ids)} documents to collection in one batch...")
-            self.collection.add(
-                ids=ids,
-                embeddings=embeddings_list,
-                metadatas=metadatas,
-                documents=documents_text
-            )
-            print(f"Successfully added {len(ids)} documents to vector db.")
-            print(f"Total documents in collection: {self.collection.count()}")
+        #  ADD TO DB IN SMALLER CHUNKS 
+        
+        # 4000 is a good, safe number.
+        BATCH_SIZE = 4000  
+        
+        total_added = 0
+        for i in range(0, len(ids), BATCH_SIZE):
+            # Create slices for the current mini-batch
+            batch_ids = ids[i:i + BATCH_SIZE]
+            batch_embeddings = embeddings_list[i:i + BATCH_SIZE]
+            batch_metadatas = metadatas[i:i + BATCH_SIZE]
+            batch_documents = documents_text[i:i + BATCH_SIZE]
             
-        except Exception as e:
-            print(f"Error adding documents to vector store: {e}")    
-            raise
+            print(f"Adding batch {i//BATCH_SIZE + 1} ({len(batch_ids)} documents)...")
+            try:
+                self.collection.add(
+                    ids=batch_ids,
+                    embeddings=batch_embeddings,
+                    metadatas=batch_metadatas,
+                    documents=batch_documents
+                )
+                total_added += len(batch_ids)
+                print(f"Successfully added {total_added} documents so far.")
+            
+            except Exception as e:
+                print(f"Error adding batch {i//BATCH_SIZE + 1}: {e}")    
+                raise
+        
+        print(f"\nSuccessfully added all {total_added} documents to vector db.")
+        print(f"Total documents in collection: {self.collection.count()}")
+    
     
     def delete_vector_db(self):
-        """Completely delete the vector database directory and reset the client."""
-        import shutil
-
+        """
+        Completely deletes the persistent vector store directory from disk
+        and re-initializes a fresh, empty one.
+        """
         if os.path.exists(self.persist_directory):
             print(f"Deleting existing vector DB at: {self.persist_directory}")
-            shutil.rmtree(self.persist_directory, ignore_errors=True)
+            try:
+                shutil.rmtree(self.persist_directory)
+                print("Deletion successful.")
+            except Exception as e:
+                print(f"Error deleting directory {self.persist_directory}: {e}")
+                raise
         else:
             print("No existing vector DB found to delete.")
 
-        # Recreate clean directory and reset client
-        os.makedirs(self.persist_directory, exist_ok=True)
-        self.client = chromadb.PersistentClient(path=self.persist_directory)
-        self.collection = self.client.get_or_create_collection(
-            name=self.collection_name,
-            metadata={"description": "PDF document embedding for RAG"}
-        )
-        print(f"Fresh vector DB initialized at: {self.persist_directory}")
+        # After deletion, re-initialize to have a clean, ready-to-use store
+        print("Re-initializing a fresh vector store...")
+        self._initialize_store()    
         
-  

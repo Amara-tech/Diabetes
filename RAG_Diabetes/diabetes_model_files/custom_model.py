@@ -1,4 +1,4 @@
-from helpers import DiabetesHelper
+from .helpers import DiabetesHelper
 from lightgbm import LGBMClassifier
 import pandas as pd
 
@@ -48,7 +48,7 @@ class CustomModel:
         Returns:
            str: 'Diabetic' or 'Non-diabetic'
         """
-        data['gender_Male'] = 1 if data.pop('gender') == 'Male' else 0  
+        complete_data['gender_Male'] = 1 if complete_data.pop('gender') == 'Male' else 0  
         # Convert dictionary to DataFrame
         input_df = pd.DataFrame([complete_data])
 
@@ -60,15 +60,3 @@ class CustomModel:
 
         # Convert numeric result to human-readable label
         return "Diabetic" if prediction == 1 else "Non-diabetic"
-
-if __name__ == "__main__":
-    model = CustomModel()
-    data = {
-        "age": 19.0,
-        "bmi": 20.4,
-        "gender": "Female",
-        "hypertension": 0,
-        "heart_disease": 0,
-        "blood_glucose_level": 129.5}
-    model.train_model()
-    print(model.predict(data))
