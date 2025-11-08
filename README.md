@@ -1,14 +1,15 @@
 ---
-title: Streamlit Template Space
+title: Diabetes Ai Assistant
 emoji: 🚀
 colorFrom: red
 colorTo: red
 sdk: docker
 app_port: 8501
 tags:
-  - streamlit
+- streamlit
 pinned: false
-short_description: Streamlit template space
+short_description: Diabetes Prediction ai assistant
+license: other
 ---
 
 # Welcome to Streamlit!
