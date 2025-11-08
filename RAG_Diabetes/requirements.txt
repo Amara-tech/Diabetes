@@ -1,10 +1,4 @@
-langchain
-langchain-core
-langchain-community
-pypdf
-pymupdf
-chromadb
-langchain-groq
-python-dotenv
-typesense
-langgraph
+numpy==1.26.4
+setuptools==80.9.0
+uv==0.9.7
+wheel==0.45.1
