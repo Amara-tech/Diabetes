@@ -15,7 +15,7 @@ def load_all_models():
     This runs once and is cached by Streamlit.
     """
     print("Loading ML model...")
-    ml_model = CustomModel(data='diabetes_model_files/diabetesbal.csv')
+    ml_model = CustomModel()
     ml_model.train_model()
     
     print("Loading Preprocessing RAG Pipeline...")
