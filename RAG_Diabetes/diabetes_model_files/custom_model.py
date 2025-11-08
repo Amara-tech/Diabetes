@@ -1,16 +1,18 @@
 from .helpers import DiabetesHelper
 from lightgbm import LGBMClassifier
 import pandas as pd
+import os
 
 class CustomModel:
-    def __init__(self, data: str= 'diabetes_model_files/diabetesbal.csv'):
+    def __init__(self, data: str= 'diabetesbal.csv'):
         """From the infromation gotten from testing for the best algorithm and it's best parameters for this problem.
         I am creating a class for the diabetes prediction model
 
         Args:
             data (str, optional): Data to use for tarining and testing. Defaults to 'diabetesbal.csv'.
         """
-        self.data = data
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.data = os.path.join(script_dir, "diabetes_model_files", data)
         self.helper = DiabetesHelper(self.data)
         self.model = LGBMClassifier(
             random_state=42, 
