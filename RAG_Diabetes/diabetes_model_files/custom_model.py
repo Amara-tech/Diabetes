@@ -12,7 +12,7 @@ class CustomModel:
             data (str, optional): Data to use for tarining and testing. Defaults to 'diabetesbal.csv'.
         """
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.data = os.path.join(script_dir, "diabetes_model_files", data)
+        self.data = os.path.join(script_dir, data)
         self.helper = DiabetesHelper(self.data)
         self.model = LGBMClassifier(
             random_state=42, 

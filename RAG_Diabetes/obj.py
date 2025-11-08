@@ -3,7 +3,7 @@ from diabetes_model_files.custom_model import CustomModel
 
 print("--- 1. Initializing CustomModel ---")
 # We must provide the correct path to the data, just like app.py does
-model = CustomModel(data='diabetes_model_files/diabetesbal.csv')
+model = CustomModel(data='diabetesbal.csv')
 
 print("\n--- 2. Training Model ---")
 # This will train the model and set the all-important self.feature_columns
