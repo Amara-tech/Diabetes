@@ -1,3 +1,13 @@
+---
+title: Diabetes RAG Recommender
+emoji: 🩺
+colorFrom: green
+colorTo: blue
+sdk: streamlit
+app_file: RAG_Diabetes/app.py
+pinned: false
+---
+
 # Diabetes Risk Prediction with RAG-Powered Recommendation System
 
 This project predicts a person’s risk of having diabetes using demographic and health data, and enhances the user experience with a **Retrieval-Augmented Generation (RAG)** model for intelligent preprocessing and personalized recommendations.
@@ -55,9 +65,6 @@ A simple, interactive **Streamlit app** allows users to:
 
 ---
 
-
----
-
 ## Technologies Used
 
 | Component | Technology |
@@ -75,25 +82,5 @@ A simple, interactive **Streamlit app** allows users to:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/<your-username>/Diabetes-Risk-RAG.git
-   cd Diabetes-Risk-RAG
-
-Acknowledgments
-
-WHO – for official diagnostic and classification resources.
-
-Health Box Diabetes – for lifestyle and prevention insights.
-
-LangChain Community – for tools enabling advanced RAG applications.
-
----
-title: Diabetes RAG Recommender
-emoji: 🩺
-colorFrom: green
-colorTo: blue
-sdk: streamlit
-app_file: RAG_Diabetes/app.py
-pinned: false
----
-
-This is my Streamlit RAG app for diabetes recommendations.
+   git clone [https://github.com/Amara-tech/Diabetes.git](https://github.com/Amara-tech/Diabetes.git)
+   cd Diabetes/RAG_Diabetes
