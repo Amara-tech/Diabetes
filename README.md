@@ -85,3 +85,15 @@ WHO – for official diagnostic and classification resources.
 Health Box Diabetes – for lifestyle and prevention insights.
 
 LangChain Community – for tools enabling advanced RAG applications.
+
+---
+title: Diabetes RAG Recommender
+emoji: 🩺
+colorFrom: green
+colorTo: blue
+sdk: streamlit
+app_file: RAG_Diabetes/app.py
+pinned: false
+---
+
+This is my Streamlit RAG app for diabetes recommendations.
