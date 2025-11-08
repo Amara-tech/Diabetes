@@ -20,6 +20,13 @@ class Preprocessing:
             raise ValueError("GOOGLE_API_KEY not found in .env file")
         genai.configure(api_key=api_key)
         
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        if not os.path.isabs(docs_path):
+            docs_path = os.path.join(script_dir, docs_path)
+
+        if not os.path.exists(docs_path):
+            raise FileNotFoundError(f"Docs path not found at: {docs_path}")
+        
         # Initialize components
         self.docs_path = docs_path
         self.embedding_manager = EmbeddingManager()

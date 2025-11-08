@@ -19,10 +19,10 @@ def load_all_models():
     ml_model.train_model()
     
     print("Loading Preprocessing RAG Pipeline...")
-    prepro_pipeline = Preprocessing(docs_path="RAG_DOCs/Prepros") 
+    prepro_pipeline = Preprocessing() 
     
     print("Loading Recommendation RAG Pipeline...")
-    reco_pipeline = Recommender(docs_path="RAG_DOCs/Recommend")
+    reco_pipeline = Recommender()
 
     print("All models loaded successfully.")
     
