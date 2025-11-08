@@ -1,4 +1,5 @@
 numpy==1.26.4
+python-dotenv==1.2.1
 setuptools==80.9.0
 uv==0.9.7
 wheel==0.45.1
