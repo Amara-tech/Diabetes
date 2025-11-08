@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import json
-import os
 
 # IMPORT YOUR HIGH-LEVEL MODULES
 from prepos import Preprocessing
@@ -36,14 +35,6 @@ ml_model, prepro_pipeline, reco_pipeline = load_all_models()
 # APP INTERFACE
 st.title("Intelligent Diabetes Prediction Assistant")
 st.write("This system uses AI to infer missing data, predict diabetes risk, and offer guidance.")
-st.sidebar.divider()
-if st.sidebar.button("Reset and Start Over"):
-    # Clear all the results stored in the session
-    if 'completed_data' in st.session_state:
-        del st.session_state['completed_data']
-    if 'prediction' in st.session_state:
-        del st.session_state['prediction']
-    st.rerun()
 st.header("Enter Your Health Information")
 st.write("Please fill in what you know. Our AI will help infer any missing values.")
 
@@ -69,10 +60,10 @@ with st.form("data_form"):
     col5, col6 = st.columns(2)
     with col5:
         # ADD key="hypertension_str"
-        hypertension_str = st.radio("Hypertension", ["No", "Yes"], index=0, horizontal=True, key="hypertension_str")
+        hypertension_str = st.radio("Hypertension", ["No", "Yes"], index=None, horizontal=True, key="hypertension_str")
     with col6:
         # ADD key="heart_disease_str"
-        heart_disease_str = st.radio("Heart Disease", ["No", "Yes"], index=0, horizontal=True, key="heart_disease_str")
+        heart_disease_str = st.radio("Heart Disease", ["No", "Yes"], index=None, horizontal=True, key="heart_disease_str")
 
     # ADD key="extra_info_query"
     extra_info_query = st.text_area(
@@ -81,10 +72,15 @@ with st.form("data_form"):
         key="extra_info_query"
     )
 
-    submitted = st.form_submit_button("Analyze My Risk")
+    submit_col, reset_col = st.columns([3, 1])
 
+    with submit_col:
+        submitted = st.form_submit_button("Analyze My Risk", use_container_width=True)
+    
+    with reset_col:
+        # This button is now also a submit button, but we'll check for it
+        reset_pressed = st.form_submit_button("Reset", use_container_width=True)
 
-#PROGRAM FLOW 
 #PROGRAM FLOW 
 if submitted:
     
@@ -117,7 +113,7 @@ if submitted:
 
                 # ML Model Prediction
                 with st.spinner("Running ML prediction..."):
-                    prediction = ml_model.predict(completed_data)
+                    prediction = ml_model.predict(completed_data, threshold=0.35)
                 
                 st.subheader("Your Diabetes Risk Profile")
                 st.success(f"Prediction is: **{prediction}**")
@@ -125,10 +121,22 @@ if submitted:
                 # Store results for the next step
                 st.session_state['completed_data'] = completed_data
                 st.session_state['prediction'] = prediction
-
+                reccommed = reco_pipeline.advice(
+                    user_data=user_data_dict,
+                    prediction=prediction
+                )
+                st.subheader("Recommendation")
+                st.markdown(reccommed)
             except Exception as e:
-                st.error(f"An error occurred during analysis: {e}")
-
+                st.error(f"An error occurred during analysis: {e}")    
+if reset_pressed:
+    # If the reset button was clicked, clear session state
+    if 'completed_data' in st.session_state:
+        del st.session_state['completed_data']
+    if 'prediction' in st.session_state:
+        del st.session_state['prediction']
+    st.rerun()
+    
 # RECOMMENDATION FLOW
 if 'prediction' in st.session_state:
     st.header("Get Personalized Recommendations")
@@ -144,7 +152,7 @@ if 'prediction' in st.session_state:
         else:
             with st.spinner("Generating your recommendation..."):
                 
-                # --- Step 3: Recommendation RAG ---
+                #Recommendation RAG
                 recommendation = reco_pipeline.recommend(
                     query=specific_question,
                     user_data=st.session_state['completed_data'],

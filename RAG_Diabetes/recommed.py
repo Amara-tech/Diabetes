@@ -49,7 +49,24 @@ class Recommender:
         self.docs = split_docs
         self.embeddings = embeddings
         print("Knowledge base initialized successfully.")
-
+        
+    
+        
+    def advice(self, user_data, prediction):
+        """ Generate response immediately after prediction
+        """
+        query = (
+            f"Actionable recommendations for a user newly predicted as {prediction}. "
+            f"Focus on: diet, lifestyle changes, and next steps. "
+            f"User characteristics: age {user_data.get('age')}, "
+            f"BMI {user_data.get('bmi')}, "
+            f"glucose {user_data.get('glucose_level')}."
+        )
+        retrieved_docs = self.retriever.retrieve(query=query)
+        result = self.generator.generate(retrieved_docs, user_data, prediction)
+        return result
+    
+    
     def recommend(self, query: str, user_data: dict, prediction: str):
         """Main RAG pipeline"""
         # Retrieve

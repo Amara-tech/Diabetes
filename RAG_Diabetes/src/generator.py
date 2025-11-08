@@ -1,7 +1,6 @@
 import google.generativeai as genai
 from textwrap import dedent
 import json
-import pandas as pd
 import re
 
 
@@ -85,9 +84,8 @@ class PreprocessingGeneration:
         reasoning_match = re.search(r"\*\*Reasoning:\*\*(.*?)(?=\*\*Completed Data:|\Z)", text_output, re.S)
         reasoning = reasoning_match.group(1).strip() if reasoning_match else "Reasoning not found."
 
-        # Get JSON
+        # Geting  JSON
         # It looks for "Completed Data
-        # and then finds the first complete { ... } block.
         json_match = re.search(r"\*\*Completed Data:\*\*[\s\S]*?({[\s\S]*})", text_output)
         
         completed_json_str = None
@@ -175,6 +173,7 @@ class RecommendationGenerator:
 
         response = self.model.generate_content(prompt)
         return response.text
+    
     
     
     
