@@ -56,7 +56,7 @@ class VectorStore:
         documents_text = []
         embeddings_list = []
         
-        # --- 1. BUILD THE LISTS (This is fast, keep it) ---
+        # BUILD THE LISTS  
         for i, (doc, embedding) in enumerate(zip(documents, embeddings)):
             doc_id = f"doc_{uuid.uuid4().hex[:8]}_{i}"
             ids.append(doc_id)
@@ -68,8 +68,6 @@ class VectorStore:
             embeddings_list.append(embedding.tolist())
         
         #  ADD TO DB IN SMALLER CHUNKS 
-        
-        # 4000 is a good, safe number.
         BATCH_SIZE = 4000  
         
         total_added = 0
