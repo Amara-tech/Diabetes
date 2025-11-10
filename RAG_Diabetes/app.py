@@ -100,35 +100,46 @@ if submitted:
         
         #  Preprocessing RAG
         with st.spinner("Analyzing and inferring missing data..."):
-            try:
-                inferred_result = prepro_pipeline.recommend(
+            if st.session_state.extra_info_query:
+                try:
+                    inferred_result = prepro_pipeline.recommend(
                     query=st.session_state.extra_info_query, 
                     user_data_dict=user_data_dict
                 )
-                completed_data = inferred_result["completed_data"]
+                    completed_data = inferred_result["completed_data"]
 
-                st.subheader("Inferred Health Profile")
-                st.write("Filled missing Values based on reasoning on some consistent data")
-                st.dataframe(pd.DataFrame([completed_data]))
+                    st.subheader("Inferred Health Profile")
+                    st.write("Filled missing Values based on reasoning on some consistent data")
+                    st.dataframe(pd.DataFrame([completed_data]))
 
-                # ML Model Prediction
-                with st.spinner("Running ML prediction..."):
-                    prediction = ml_model.predict(completed_data, threshold=0.35)
+                    # ML Model Prediction
+                    with st.spinner("Running ML prediction..."):
+                        prediction = ml_model.predict(completed_data, threshold=0.35)
                 
-                st.subheader("Your Diabetes Risk Profile")
-                st.success(f"Prediction is: **{prediction}**")
-
-                # Store results for the next step
-                st.session_state['completed_data'] = completed_data
-                st.session_state['prediction'] = prediction
-                reccommed = reco_pipeline.advice(
-                    user_data=user_data_dict,
-                    prediction=prediction
+                    st.subheader("Your Diabetes Risk Profile")
+                    if prediction == "Non-diabetic":
+                        st.success(f"Prediction is: **{prediction}**")
+                    else:
+                        st.error(f"Prediction is: **{prediction}**")
+                    # Store results for the next step
+                    st.session_state['completed_data'] = completed_data
+                    st.session_state['prediction'] = prediction
+                    reccommed = reco_pipeline.advice(
+                        user_data=user_data_dict,
+                        prediction=prediction
                 )
-                st.subheader("Recommendation")
-                st.markdown(reccommed)
-            except Exception as e:
-                st.error(f"An error occurred during analysis: {e}")    
+                    st.subheader("Recommendation")
+                    st.markdown(reccommed)
+                except Exception as e:
+                    st.error(f"An error occurred during analysis: {e}")    
+            else:
+                 with st.spinner("Running ML prediction..."):
+                        prediction = ml_model.predict(user_data_dict, threshold=0.35)
+                        st.subheader("Your Diabetes Risk Profile")
+                        if prediction == "Non-diabetic":
+                            st.success(f"Prediction is: **{prediction}**")  
+                        else:
+                            st.error(f"Prediction is: **{prediction}**")         
 if reset_pressed:
     # If the reset button was clicked, clear session state
     if 'completed_data' in st.session_state:
