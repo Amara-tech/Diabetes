@@ -144,6 +144,8 @@ if submitted:
                         user_data=user_data_dict,
                         prediction=prediction
                         )         
+                        st.subheader("Recommendation")
+                        st.markdown(reccommed)
 if reset_pressed:
     # If the reset button was clicked, clear session state
     if 'completed_data' in st.session_state:
