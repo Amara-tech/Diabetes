@@ -139,7 +139,11 @@ if submitted:
                         if prediction == "Non-diabetic":
                             st.success(f"Prediction is: **{prediction}**")  
                         else:
-                            st.error(f"Prediction is: **{prediction}**")         
+                            st.error(f"Prediction is: **{prediction}**")    
+                        reccommed = reco_pipeline.advice(
+                        user_data=user_data_dict,
+                        prediction=prediction
+                        )         
 if reset_pressed:
     # If the reset button was clicked, clear session state
     if 'completed_data' in st.session_state:
