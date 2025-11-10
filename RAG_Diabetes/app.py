@@ -99,7 +99,7 @@ if submitted:
         }
         
         #  Preprocessing RAG
-        with st.spinner("Analyzing and inferring missing data..."):
+        with st.spinner("Analyzing and processing recommendations..."):
             if st.session_state.extra_info_query:
                 try:
                     inferred_result = prepro_pipeline.recommend(
