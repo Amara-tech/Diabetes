@@ -18,3 +18,4 @@ lightgbm
 streamlit
 pypdf
 rich
+reportlab
