@@ -1,3 +1,4 @@
+streamlit
 langchain
 langchain-community
 langchain-core
@@ -11,9 +12,8 @@ torch
 pandas
 lightgbm
 numpy
-streamlit
 pypdf
 python-dotenv
-rich
 matplotlib
 seaborn
+protobuf<4
