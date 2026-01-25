@@ -72,3 +72,4 @@ urllib3==2.6.3
 uv==0.9.7
 wcwidth==0.2.14
 wheel==0.45.1
+langchain_core
