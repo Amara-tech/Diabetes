@@ -1,4 +1,4 @@
-streamlit
+rtstreamlit
 langchain
 langchain-community
 langchain-core
@@ -16,4 +16,5 @@ pypdf
 python-dotenv
 matplotlib
 seaborn
+reportlab
 protobuf<4
