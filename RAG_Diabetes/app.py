@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import markdown
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import letter
@@ -40,8 +41,9 @@ def generate_pdf(completed_data, prediction, advice):
 
     # Advice
     story.append(Paragraph("<b>Recommendation:</b>", styles['Heading2']))
-    story.append(Paragraph(advice.replace("\n", "<br/>"), styles['BodyText']))
-
+    html_text = markdown.markdown(advice)
+    story.append(Paragraph(html_text, styles['BodyText']))
+    
     doc.build(story)
     buffer.seek(0)
     return buffer

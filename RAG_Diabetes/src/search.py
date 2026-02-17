@@ -56,6 +56,10 @@ class RAGRetriever:
                             'similarity_score': similarity_score,
                             'rank': i+1
                         })
+                        # Debug preview
+                        preview = document[:200].replace("\n", " ")
+                        print(f"[Doc {i+1}] Score: {similarity_score:.3f}")
+                        print(f"Preview: {preview}...\n")
                 print(f"Retrieved {len(retrieved_docs)} document(after filtering)")
             else:
                 print("No documents found")  

@@ -119,12 +119,41 @@ class Preprocessing:
     
     
     # In Preprocessing class
+    # Reduce RAG noise by adding user data to query
     def recommend(self, query: str, user_data_dict: dict):
-        retrieved_docs = self.retriever.retrieve(query, top_k=5)
+        parts = [
+        "Retrieve medical or statistical information useful "
+        "for estimating missing diabetes-related health values"
+        ]
+
+        # Missing fields first (most important signal)
+        missing = [k for k, v in user_data_dict.items() if v is None]
+        if missing:
+            parts.append(f"Missing health values: {', '.join(missing)}")
+
+        # Known structured health data
+        parts.append(f"Gender: {user_data_dict['gender']} and Age: {user_data_dict['age']}")
+        if user_data_dict.get("bmi") is not None:
+            parts.append(f"BMI: {user_data_dict['bmi']}")
+
+        if user_data_dict.get("glucose_level") is not None:
+            parts.append(f"Blood glucose level: {user_data_dict['glucose_level']}")
+
+        if user_data_dict.get("hypertension") is not None:
+            parts.append(f"Hypertension status: {user_data_dict['hypertension']}")
+
+        # Lifestyle / descriptive info
+        parts.append(
+            "Lifestyle or physical information useful for estimation: "
+            f"{query}"
+        )
+        querys = ".".join(parts) 
+           
+        retrieved_docs = self.retriever.retrieve(querys, top_k=5)
         result = self.generator.infer_missing_data(
             retrieved_docs=retrieved_docs,
             user_data=user_data_dict,
-            query=query  
+            query=querys  
         )
         return result 
                
