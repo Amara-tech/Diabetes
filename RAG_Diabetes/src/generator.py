@@ -1,12 +1,14 @@
-import google.generativeai as genai
+from google import genai
 from textwrap import dedent
 import json
 import re
+import os
 
 
 class PreprocessingGeneration:
     def __init__(self, model_name="gemini-2.5-pro"):
-        self.model = genai.GenerativeModel(model_name)
+        self.model_name = model_name
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
         self.template = dedent("""
         You are a medical data inference assistant helping with a diabetes prediction system.
 
@@ -74,7 +76,7 @@ class PreprocessingGeneration:
         )
 
         # top-tier model for this kind of complex reasoning task.
-        response = self.model.generate_content(prompt)
+        response = self.client.models.generate_content(model=self.model_name, contents=prompt)
         text_output = response.text
 
         print("=== MODEL RAW OUTPUT ===")
@@ -122,7 +124,7 @@ class PreprocessingGeneration:
 class RecommendationGenerator:
     def __init__(self, model_name: str = "gemini-2.5-pro"):
         self.model_name = model_name
-        self.model = genai.GenerativeModel(model_name)
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
         # Base prompt template
         self.template = dedent("""
@@ -171,7 +173,10 @@ class RecommendationGenerator:
             prediction=prediction
         )
 
-        response = self.model.generate_content(prompt)
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt
+        )
         return response.text
     
     

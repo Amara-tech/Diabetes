@@ -1,6 +1,6 @@
 from typing import List
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from google import genai
+import google.genai as genai
 import numpy as np
 from dotenv import load_dotenv
 import os
@@ -9,13 +9,12 @@ load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("GOOGLE_API_KEY not found in .env file")
-client = genai.Client(api_key=api_key)
 
 
 class EmbeddingManager:
     """Handles document embedding using Google Gemini embedding models"""
 
-    def __init__(self, model_name: str = "gemini-embedding-001", output_dim: int=768):
+    def __init__(self, model_name: str = "gemini-embedding-001"):
         """
         Initialize the EmbeddingManager with a Gemini model.
         
@@ -23,8 +22,7 @@ class EmbeddingManager:
             model_name: Google embedding model name (e.g., 'text-embedding-004')
         """
         self.model_name = model_name
-        self.client = genai.Client()
-        self.output_dim = output_dim
+        self.client = genai.Client(api_key=api_key)
         
     def split_documents(self, documents, chunk_size=1000, chunk_overlap=200):
         """Split loaded documents into smaller chunks."""
@@ -64,11 +62,7 @@ class EmbeddingManager:
             try:
                 result = self.client.models.embed_content(
                     model=self.model_name,
-                    contents=batch,
-                    config=genai.types.EmbedContentConfig(
-                    task_type="RETRIEVAL_DOCUMENT",   
-                    output_dimensionality=self.output_dim
-                )
+                    contents=batch
                 )
                 batch_embeddings = [np.array(e.values) for e in result.embeddings]
                 embeddings.extend(batch_embeddings)

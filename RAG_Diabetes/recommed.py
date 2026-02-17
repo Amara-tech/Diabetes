@@ -3,7 +3,7 @@ from src.embedding import EmbeddingManager
 from src.vectorstore import VectorStore
 from src.generator import RecommendationGenerator
 from src.search import RAGRetriever
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 import os
 
@@ -16,7 +16,7 @@ class Recommender:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found in .env file")
-        genai.configure(api_key=api_key)
+        self.client = genai.Client(api_key=api_key)
         
         script_dir = os.path.dirname(os.path.abspath(__file__))
         if not os.path.isabs(docs_path):

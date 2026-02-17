@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from langchain_core.documents import Document
-import google.generativeai as genai
+from google import genai
 
 from src.data_loader import DocumentProcessor
 from src.embedding import EmbeddingManager
@@ -18,7 +18,7 @@ class Preprocessing:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found in .env file")
-        genai.configure(api_key=api_key)
+        self.client = genai.Client(api_key=api_key)
         
         script_dir = os.path.dirname(os.path.abspath(__file__))
         if not os.path.isabs(docs_path):
