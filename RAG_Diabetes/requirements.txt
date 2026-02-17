@@ -18,3 +18,4 @@ matplotlib
 seaborn
 reportlab
 protobuf<4
+markdown
