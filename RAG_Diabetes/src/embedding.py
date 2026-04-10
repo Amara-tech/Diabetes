@@ -1,6 +1,7 @@
 from typing import List
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import google.genai as genai
+from google.genai import types
 import numpy as np
 from dotenv import load_dotenv
 import os
@@ -62,7 +63,8 @@ class EmbeddingManager:
             try:
                 result = self.client.models.embed_content(
                     model=self.model_name,
-                    contents=batch
+                    contents=batch,
+                    config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY")
                 )
                 batch_embeddings = [np.array(e.values) for e in result.embeddings]
                 embeddings.extend(batch_embeddings)

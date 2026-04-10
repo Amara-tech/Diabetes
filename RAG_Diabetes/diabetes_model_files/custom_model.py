@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 class CustomModel:
-    def __init__(self, data: str= 'diabetesbal.csv'):
+    def __init__(self, data: str= 'diabetesbals.csv'):
         """From the infromation gotten from testing for the best algorithm and it's best parameters for this problem.
         I am creating a class for the diabetes prediction model
 
