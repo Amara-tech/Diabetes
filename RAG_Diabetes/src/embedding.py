@@ -72,7 +72,7 @@ class EmbeddingManager:
                 embeddings.extend(batch_embeddings)
             except Exception as e:
                 print(f"Error embedding text: {e}")
-            time.sleep(10)    
+            time.sleep(60)    
         embeddings_array = np.array(embeddings)
         print(f"Generated embeddings with shape: {embeddings_array.shape}")
         return embeddings_array
