@@ -5,6 +5,7 @@ from google.genai import types
 import numpy as np
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
@@ -43,8 +44,44 @@ class EmbeddingManager:
             print(f"\nExample chunk:\nContent: {split_docs[0].page_content[:200]}...")
             print(f"Metadata: {split_docs[0].metadata}")
         return split_docs
-                
+    
+    
     def generate_embeddings(self, texts: List[str], batch_size: int = 5) -> np.ndarray:
+        print(f"Generating embeddings using {self.model_name} for {len(texts)} texts...")
+
+        embeddings = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            print(f"Processing batch {i//batch_size + 1}...")
+        
+            while True:  # keep retrying this batch until it succeeds
+                try:
+                    result = self.client.models.embed_content(
+                        model=self.model_name,
+                        contents=batch,
+                        config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY")
+                )
+                    batch_embeddings = [np.array(e.values) for e in result.embeddings]
+                    embeddings.extend(batch_embeddings)
+                    break  # batch succeeded, move to next one
+                
+                except Exception as e:
+                    error_str = str(e)
+                    if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                        print(f"Rate limit hit. Waiting 60 seconds before retrying...")
+                        time.sleep(60)
+                        print("Retrying...")
+                    else:
+                        print(f"Error embedding text: {e}")
+                        break  # non-rate-limit error, skip this batch
+                    
+        embeddings_array = np.array(embeddings)
+        print(f"Generated embeddings with shape: {embeddings_array.shape}")
+        return embeddings_array
+
+
+                
+    def generate_embedding(self, texts: List[str], batch_size: int = 5) -> np.ndarray:
         """
         Generate embeddings for a list of texts using the Gemini embedding API.
         
