@@ -1,30 +1,32 @@
 from typing import List
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import google.genai as genai
-from google.genai import types
+from fastembed import TextEmbedding
+#import google.genai as genai
+#from google.genai import types
 import numpy as np
-from dotenv import load_dotenv
-import os
-import time
+#from dotenv import load_dotenv
+#import os
+#import time
 
-load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise ValueError("GOOGLE_API_KEY not found in .env file")
+#load_dotenv()
+#api_key = os.getenv("GOOGLE_API_KEY")
+#if not api_key:
+    #raise ValueError("GOOGLE_API_KEY not found in .env file")
 
 
 class EmbeddingManager:
     """Handles document embedding using Google Gemini embedding models"""
 
-    def __init__(self, model_name: str = "gemini-embedding-001"):
+    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5"):
         """
         Initialize the EmbeddingManager with a Gemini model.
         
         Args:
             model_name: Google embedding model name (e.g., 'text-embedding-004')
         """
-        self.model_name = model_name
-        self.client = genai.Client(api_key=api_key)
+        self.model_name = TextEmbedding(model_name)
+        self.model = TextEmbedding(model_name)
+        #self.client = genai.Client(api_key=api_key)
         
     def split_documents(self, documents, chunk_size=1000, chunk_overlap=200):
         """Split loaded documents into smaller chunks."""
@@ -45,8 +47,15 @@ class EmbeddingManager:
             print(f"Metadata: {split_docs[0].metadata}")
         return split_docs
     
+    #Generating embeddings with fastembedding model
+    def generate_embeddings(self, texts: List[str], batch_size: int = 32) -> np.ndarray:
+        print(f"Generating embeddings for {len(texts)} texts...")
+        embeddings = list(self.model.embed(texts))
+        print(f"Generated embeddings with shape: {np.array(embeddings).shape}")
+        return np.array(embeddings)
+   
     
-    def generate_embeddings(self, texts: List[str], batch_size: int = 5) -> np.ndarray:
+    def generate_embedding(self, texts: List[str], batch_size: int = 5) -> np.ndarray:
         """
         Generate embeddings for a list of texts using the Gemini embedding API.
         

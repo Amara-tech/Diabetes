@@ -147,7 +147,7 @@ class Preprocessing:
             "Lifestyle or physical information useful for estimation: "
             f"{query}"
         )
-        querys = ".".join(parts) 
+        querys = ". ".join(parts) 
            
         retrieved_docs = self.retriever.retrieve(querys, top_k=5)
         result = self.generator.infer_missing_data(
