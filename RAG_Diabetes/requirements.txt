@@ -18,3 +18,4 @@ seaborn
 reportlab
 protobuf<4
 markdown
+fastembed
