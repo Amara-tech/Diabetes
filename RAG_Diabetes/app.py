@@ -50,7 +50,6 @@ def generate_pdf(completed_data, prediction, advice):
     return buffer
 
 
-os.environ["HUGGINGFACE_HUB_TOKEN"] = st.secrets["HF_TOKEN"]
 # IMPORT HIGH-LEVEL MODULES
 from prepos import Preprocessing
 from recommed import Recommender
