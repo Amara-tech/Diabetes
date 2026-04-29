@@ -10,14 +10,13 @@ import os
 class Recommender:
     """High-level RAG system for diabetes recommendation"""
 
-    def __init__(self, docs_path: str = "RAG_DOCs/Recommend"):
-        """Initialize RAG components"""
+    def __init__(self, docs_path: str = "RAG_DOCs/Recommend", embedding_manager=None):
         load_dotenv()
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found in .env file")
         self.client = genai.Client(api_key=api_key)
-        
+
         script_dir = os.path.dirname(os.path.abspath(__file__))
         if not os.path.isabs(docs_path):
             docs_path = os.path.join(script_dir, docs_path)
@@ -25,14 +24,13 @@ class Recommender:
         if not os.path.exists(docs_path):
             raise FileNotFoundError(f"Docs path not found at: {docs_path}")
 
-        # Initialize components
         self.doc_processor = DocumentProcessor(docs_path)
-        self.embedding_manager = EmbeddingManager()
+        # euse shared embedder if passed in, else create new
+        self.embedding_manager = embedding_manager if embedding_manager else EmbeddingManager()
         self.vectorstore = VectorStore(collection_name="recommendation_document", persist_directory="RAG_DOCs/vector_store_reco")
         self.retriever = RAGRetriever(self.vectorstore, self.embedding_manager)
         self.generator = RecommendationGenerator()
 
-        # Load and embed documents
         self.docs = None
         self.embeddings = None
         self.initialize_knowledge_base()

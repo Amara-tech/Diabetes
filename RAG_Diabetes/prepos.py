@@ -12,7 +12,7 @@ from src.search import RAGRetriever
 
 
 class Preprocessing:
-    def __init__(self, docs_path: str = "RAG_DOCs/Prepros"):
+    def __init__(self, docs_path: str = "RAG_DOCs/Prepros", embedding_manager=None):
         """Initialize RAG components and configure API."""
         load_dotenv()
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -29,7 +29,7 @@ class Preprocessing:
         
         # Initialize components
         self.docs_path = docs_path
-        self.embedding_manager = EmbeddingManager()
+        self.embedding_manager =  embedding_manager if embedding_manager else EmbeddingManager()
         self.vectorstore = VectorStore(collection_name="preprocessing_document", persist_directory="RAG_DOCs/vector_store_prepro")
         self.retriever = RAGRetriever(self.vectorstore, self.embedding_manager)
         self.generator = PreprocessingGeneration()

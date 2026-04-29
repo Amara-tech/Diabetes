@@ -11,3 +11,5 @@ wheels/
 .env
 uv.lock
 .python-version
+RAG_DOCs/vector_store_prepro/
+RAG_DOCs/vector_store_reco/
