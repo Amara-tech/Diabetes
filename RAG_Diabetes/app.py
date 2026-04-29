@@ -6,6 +6,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 import io
+import os
 
 
 def generate_pdf(completed_data, prediction, advice):
@@ -49,7 +50,7 @@ def generate_pdf(completed_data, prediction, advice):
     return buffer
 
 
-
+os.environ["HUGGINGFACE_HUB_TOKEN"] = st.secrets["HF_TOKEN"]
 # IMPORT HIGH-LEVEL MODULES
 from prepos import Preprocessing
 from recommed import Recommender
